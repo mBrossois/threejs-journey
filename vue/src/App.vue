@@ -1,10 +1,23 @@
 <template>
   <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/basics">basics</router-link>
+    <NavSelect></NavSelect>
   </div>
   <router-view/>
 </template>
+
+<script lang="ts">
+import {Options, Vue} from "vue-class-component";
+import NavSelect from "@/components/NavSelect.vue";
+
+@Options({
+  components: {
+    NavSelect
+  }
+})
+export default class App extends Vue {
+
+}
+</script>
 
 <style lang="scss">
 body {

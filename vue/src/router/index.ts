@@ -1,6 +1,8 @@
 import {createRouter, createWebHistory, RouteRecordRaw, RouterOptions} from 'vue-router'
 import Home from '../views/Home.vue'
-import Basics from '../views/BasicScene.vue'
+import Basics from '../views/BasicsBasicScene.vue'
+import BasicsBasicScene from "@/views/BasicsBasicScene.vue";
+import BasicsTransformObjects from "@/views/BasicsTransformObjects.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -8,8 +10,12 @@ const routes: RouteRecordRaw[] = [
     component: Home
   },
   {
-    path: '/basics',
-    component: Basics
+    path: '/basic-scene',
+    component: BasicsBasicScene
+  },
+  {
+    path: '/transform-objects',
+    component: BasicsTransformObjects
   }
 ] as RouteRecordRaw[]
 
