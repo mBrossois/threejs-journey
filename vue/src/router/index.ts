@@ -3,6 +3,7 @@ import Home from '../views/Home.vue'
 import Basics from '../views/BasicsBasicScene.vue'
 import BasicsBasicScene from "@/views/BasicsBasicScene.vue";
 import BasicsTransformObjects from "@/views/BasicsTransformObjects.vue";
+import BasicAnimations from "@/views/BasicAnimations.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -16,6 +17,10 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/transform-objects',
     component: BasicsTransformObjects
+  },
+  {
+    path: '/animations',
+    component: BasicAnimations
   }
 ] as RouteRecordRaw[]
 

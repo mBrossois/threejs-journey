@@ -25,7 +25,8 @@ export default class NavSelect extends Vue {
     {title: 'Basics', sectionTitle: true},
     {title: "Home", url: "/"},
     {title: "Basic scene", url: "/basic-scene"},
-    {title: "Transform objects", url: "/transform-objects"}
+    {title: "Transform objects", url: "/transform-objects"},
+    {title: "Animations", url: "/animations"}
   ]
 
   setActiveScene(title: string) {
