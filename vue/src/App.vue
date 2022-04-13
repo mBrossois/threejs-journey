@@ -36,9 +36,8 @@ body {
 
 #nav {
   position: fixed;
-  right: 1em;
-  top: 1em;
-  padding: 30px;
+  right: 2em;
+  top: 2em;
 
   a {
     font-weight: bold;
