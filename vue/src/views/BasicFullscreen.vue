@@ -1,5 +1,5 @@
 <template>
-  <canvas ref="webgl"/>
+  <canvas class="webgl" ref="webgl"/>
 </template>
 
 <script lang="ts">
@@ -26,8 +26,8 @@ export default class BasicFullscreen extends Vue {
     webgl: HTMLCanvasElement
   }
   sizes = {
-    width: 800,
-    height: 600
+    width: window.innerWidth,
+    height: window.innerHeight
   }
   cursor = {
     x: 0,
@@ -66,9 +66,46 @@ export default class BasicFullscreen extends Vue {
     this.controls = new OrbitControls(this.camera, this.$refs.webgl);
     this.controls.enableDamping = true;
 
+    // Resizing
+    window.addEventListener('resize', () => {
+      this.sizes.height = window.innerHeight
+      this.sizes.width = window.innerWidth
+
+      this.camera.aspect = this.sizes.width / this.sizes.height
+      this.camera.updateProjectionMatrix()
+      this.renderer.setSize(this.sizes.width, this.sizes.height)
+
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    })
+
+    // Double click to full screen
+    window.addEventListener('dblclick', () =>
+    {
+      //Todo check for support for safari
+      if(document.fullscreenElement)
+      {
+        document.exitFullscreen()
+      }
+      else
+      {
+        this.$refs.webgl.requestFullscreen()
+      }
+    })
+
     //animations
     this.tick()
   }
 
 }
 </script>
+
+<style lang="scss">
+.webgl {
+  position: fixed;
+  top:0;
+  left: 0;
+  z-index: 0;
+  outline: none;
+
+}
+</style>
