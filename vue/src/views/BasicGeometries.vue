@@ -8,6 +8,7 @@ import * as THREE from "three";
 import {Clock, Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
+import {fullscreenUtil} from "@/utils/fullscreen.util";
 
 const scene: Scene = new THREE.Scene()
 
@@ -20,7 +21,7 @@ const cube: Mesh = new THREE.Mesh(
 const clock: Clock = new THREE.Clock()
 
 @Options({})
-export default class BasicFullscreen extends Vue {
+export default class BasicGeometries extends Vue {
   $refs!: {
     webgl: FullScreenDocumentElement
   }
@@ -79,25 +80,8 @@ export default class BasicFullscreen extends Vue {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     })
 
-    // Double click to full screen
-    window.addEventListener('dblclick', () => {
-
-      const fullscreenElement = this.doc.fullscreenElement || this.doc.webkitFullscreenElement
-
-      if (!fullscreenElement) {
-        if(this.$refs.webgl.requestFullscreen) {
-          this.$refs.webgl.requestFullscreen()
-        } else if(this.$refs.webgl.webkitRequestFullscreen) {
-          this.$refs.webgl.webkitRequestFullscreen()
-        }
-      } else {
-        if(this.doc.exitFullscreen()) {
-          document.exitFullscreen()
-        } else if(this.doc.webkitExitFullscreen) {
-          this.doc.webkitExitFullscreen()
-        }
-      }
-    })
+    // Full screen
+    fullscreenUtil(this.$refs.webgl)
 
     //animations
     this.tick()

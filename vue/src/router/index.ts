@@ -1,42 +1,20 @@
 import {createRouter, createWebHistory, RouteRecordRaw, RouterOptions} from 'vue-router'
-import Home from '../views/Home.vue'
-import Basics from '../views/BasicsBasicScene.vue'
 import BasicsBasicScene from "@/views/BasicsBasicScene.vue";
-import BasicsTransformObjects from "@/views/BasicsTransformObjects.vue";
-import BasicAnimations from "@/views/BasicAnimations.vue";
-import BasicCameras from "@/views/BasicCameras.vue";
-import BasicFullscreen from "@/views/BasicFullscreen.vue";
+import {RouteConstants} from "@/utils/route.constants";
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    component: Home
-  },
-  {
-    path: '/basic-scene',
-    component: BasicsBasicScene
-  },
-  {
-    path: '/transform-objects',
-    component: BasicsTransformObjects
-  },
-  {
-    path: '/animations',
-    component: BasicAnimations
-  },
-  {
-    path: '/cameras',
-    component: BasicCameras
-  },
-  {
-    path: '/fullscreen',
-    component: BasicFullscreen
+const routes = (): RouteRecordRaw[] => {
+  const allRoutes: RouteRecordRaw[] = [{path: '/', component: BasicsBasicScene}] as RouteRecordRaw[];
+  for (const route of RouteConstants) {
+    if (!route.sectionTitle) {
+      allRoutes.push({path: route.url, component: route.component} as RouteRecordRaw)
+    }
   }
-] as RouteRecordRaw[]
+  return allRoutes
+}
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes: routes
+  routes: routes()
 } as RouterOptions)
 
 export default router
