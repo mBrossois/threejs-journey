@@ -22,7 +22,7 @@ const clock: Clock = new THREE.Clock()
 @Options({})
 export default class BasicFullscreen extends Vue {
   $refs!: {
-    webgl: HTMLCanvasElement
+    webgl: FullScreenDocumentElement
   }
   sizes = {
     width: window.innerWidth,
@@ -36,6 +36,8 @@ export default class BasicFullscreen extends Vue {
   // fov between 45 & 75 || only shows objects between near and far values
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
   controls: OrbitControls = {} as OrbitControls
+
+  doc = document as FullScreenDocument
 
   tick() {
     // Update controls
@@ -80,10 +82,20 @@ export default class BasicFullscreen extends Vue {
     // Double click to full screen
     window.addEventListener('dblclick', () => {
 
-      if (!document.fullscreenElement) {
+      const fullscreenElement = this.doc.fullscreenElement || this.doc.webkitFullscreenElement
+
+      if (!fullscreenElement) {
+        if(this.$refs.webgl.requestFullscreen) {
           this.$refs.webgl.requestFullscreen()
+        } else if(this.$refs.webgl.webkitRequestFullscreen) {
+          this.$refs.webgl.webkitRequestFullscreen()
+        }
       } else {
-        document.exitFullscreen()
+        if(this.doc.exitFullscreen) {
+          document.exitFullscreen()
+        } else if(this.doc.webkitExitFullscreen) {
+          this.doc.webkitExitFullscreen()
+        }
       }
     })
 
