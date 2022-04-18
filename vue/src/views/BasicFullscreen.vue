@@ -37,8 +37,6 @@ export default class BasicFullscreen extends Vue {
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
   controls: OrbitControls = {} as OrbitControls
 
-  doc = document as FullScreenDocument
-
   tick() {
     // Update controls
     this.controls.update()
@@ -81,25 +79,11 @@ export default class BasicFullscreen extends Vue {
 
     // Double click to full screen
     window.addEventListener('dblclick', () => {
-      if (this.doc.fullscreenElement) {
-        if (this.doc.exitFullscreen()) {
-          this.doc.exitFullscreen()
-        }
-        // else if (this.doc.mozCancelFullScreen) this.doc.mozCancelFullScreen();
-        else if (this.doc.webkitExitFullscreen) this.doc.webkitExitFullscreen();
-        else if (this.doc.mozCancelFullScreen) {
-          this.doc.mozCancelFullScreen();
-        }else if (this.doc.mozCancelFullscreen) {
-          this.doc.mozCancelFullscreen();
-        } else if (this.doc.msExitFullscreen) {
-          this.doc.msExitFullscreen();
-        }
-      } else {
-        if(this.$refs.webgl.requestFullscreen) {
+
+      if (!document.fullscreenElement) {
           this.$refs.webgl.requestFullscreen()
-        } else if(this.$refs.webgl.webkitRequestFullscreen) {
-          this.$refs.webgl.webkitRequestFullscreen()
-        }
+      } else {
+        document.exitFullscreen()
       }
     })
 
