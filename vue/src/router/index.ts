@@ -5,6 +5,7 @@ import BasicsBasicScene from "@/views/BasicsBasicScene.vue";
 import BasicsTransformObjects from "@/views/BasicsTransformObjects.vue";
 import BasicAnimations from "@/views/BasicAnimations.vue";
 import BasicCameras from "@/views/BasicCameras.vue";
+import BasicFullscreen from "@/views/BasicFullscreen.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -26,6 +27,10 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/cameras',
     component: BasicCameras
+  },
+  {
+    path: '/fullscreen',
+    component: BasicFullscreen
   }
 ] as RouteRecordRaw[]
 

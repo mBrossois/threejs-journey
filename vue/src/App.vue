@@ -20,9 +20,10 @@ export default class App extends Vue {
 </script>
 
 <style lang="scss">
-body {
+html, body {
   padding: 0;
   margin: 0;
+  overflow: hidden;
 }
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -38,6 +39,7 @@ body {
   position: fixed;
   right: 2em;
   top: 2em;
+  z-index: 100;
 
   a {
     font-weight: bold;
