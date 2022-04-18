@@ -22,7 +22,7 @@ const clock: Clock = new THREE.Clock()
 @Options({})
 export default class BasicFullscreen extends Vue {
   $refs!: {
-    webgl: FullScreenDocumentElement
+    webgl: HTMLCanvasElement
   }
   sizes = {
     width: window.innerWidth,
