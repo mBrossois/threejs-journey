@@ -5,22 +5,47 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {Clock, Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
+import {BufferAttribute, BufferGeometry, Clock, Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
+import {fullscreenUtil} from "@/utils/fullscreen.util";
 
 const scene: Scene = new THREE.Scene()
 
 // Object
-const cube: Mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({color: 0xff0000}))
+// const cube: Mesh = new THREE.Mesh(
+//     new THREE.BoxGeometry(1, 1, 1, 3, 3, 3),
+//     new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true}))
+const geometry = new THREE.BufferGeometry()
+// const positionsArray: Float32Array = new Float32Array([
+//   0, 0, 0,
+//   0, 1, 0,
+//   1,0 ,0,
+// ]);
+//
+// const positionsAttribute: BufferAttribute = new THREE.BufferAttribute(positionsArray, 3)
+// geometry.setAttribute('position', positionsAttribute)
+
+const count = 500 * 3 * 3
+const positionsArray: Float32Array = new Float32Array(count)
+for(let i = 0; i < count; i++) {
+  positionsArray[i] = Math.random() - 0.5
+}
+const positionsAttribute: BufferAttribute = new THREE.BufferAttribute(positionsArray, 3)
+geometry.setAttribute('position', positionsAttribute)
+
+const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+
+const mesh = new THREE.Mesh(geometry, material)
+
+
+
 
 // Clock
 const clock: Clock = new THREE.Clock()
 
 @Options({})
-export default class BasicFullscreen extends Vue {
+export default class BasicGeometries extends Vue {
   $refs!: {
     webgl: FullScreenDocumentElement
   }
@@ -51,12 +76,12 @@ export default class BasicFullscreen extends Vue {
 
   mounted() {
     // object
-    scene.add(cube)
+    scene.add(mesh)
 
     //camera
     // this.camera.position.set(2, 2, 2)
     this.camera.position.z = 3
-    this.camera.lookAt(cube.position)
+    this.camera.lookAt(mesh.position)
     scene.add(this.camera)
 
     //renderer
@@ -79,25 +104,8 @@ export default class BasicFullscreen extends Vue {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     })
 
-    // Double click to full screen
-    window.addEventListener('dblclick', () => {
-
-      const fullscreenElement = this.doc.fullscreenElement || this.doc.webkitFullscreenElement
-
-      if (!fullscreenElement) {
-        if(this.$refs.webgl.requestFullscreen) {
-          this.$refs.webgl.requestFullscreen()
-        } else if(this.$refs.webgl.webkitRequestFullscreen) {
-          this.$refs.webgl.webkitRequestFullscreen()
-        }
-      } else {
-        if(this.doc.exitFullscreen()) {
-          document.exitFullscreen()
-        } else if(this.doc.webkitExitFullscreen) {
-          this.doc.webkitExitFullscreen()
-        }
-      }
-    })
+    // Full screen
+    fullscreenUtil(this.$refs.webgl)
 
     //animations
     this.tick()
