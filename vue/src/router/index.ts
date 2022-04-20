@@ -3,7 +3,7 @@ import BasicsBasicScene from "@/views/BasicsBasicScene.vue";
 import {RouteConstants} from "@/utils/route.constants";
 
 const routes = (): RouteRecordRaw[] => {
-  const allRoutes: RouteRecordRaw[] = [{path: '/', component: BasicsBasicScene}] as RouteRecordRaw[];
+  const allRoutes: RouteRecordRaw[] = [{path: '/', redirect: RouteConstants[1].url}] as RouteRecordRaw[];
   for (const route of RouteConstants) {
     if (!route.sectionTitle) {
       allRoutes.push({path: route.url, component: route.component} as RouteRecordRaw)
