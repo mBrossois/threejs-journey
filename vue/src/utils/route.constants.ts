@@ -6,6 +6,7 @@ import BasicCameras from "@/views/BasicCameras.vue";
 import BasicFullscreen from "@/views/BasicFullscreen.vue";
 import BasicGeometries from "@/views/BasicGeometries.vue";
 import BasicDebugUi from "@/views/BasicDebugUi.vue";
+import BasicTextures from "@/views/BasicTextures.vue";
 
 export const RouteConstants: { title: string, sectionTitle?: boolean, url: string, component: Component }[] = [
   {title: 'Basics', sectionTitle: true, url: '', component: {} as Component},
@@ -16,4 +17,5 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "Fullscreen and resizing", url: "/fullscreen", component: BasicFullscreen},
   {title: "Geometries", url: "/geometries", component: BasicGeometries},
   {title: "Debug UI", url: "/debug-ui", component: BasicDebugUi},
+  {title: "Textures", url: "/textures", component: BasicTextures},
 ]
