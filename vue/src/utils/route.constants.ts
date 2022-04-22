@@ -18,4 +18,5 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "Geometries", url: "/geometries", component: BasicGeometries},
   {title: "Debug UI", url: "/debug-ui", component: BasicDebugUi},
   {title: "Textures", url: "/textures", component: BasicTextures},
+  {title: "Materials", url: "/materials", component: BasicTextures},
 ]
