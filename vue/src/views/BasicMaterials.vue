@@ -5,63 +5,67 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {BoxGeometry, PerspectiveCamera, Scene, WebGLRenderer} from "three";
+import {BoxGeometry, PerspectiveCamera, Scene, TextureLoader, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
 import gsap from 'gsap'
 
-// Texture
-const loadingManager = new THREE.LoadingManager()
-loadingManager.onStart = () => {
-  console.log('loading started')
-}
-loadingManager.onLoad = () => {
-  console.log('loading finished')
-}
-loadingManager.onProgress = () => {
-  console.log('loading in progress')
-}
-loadingManager.onError = (e: any) => {
-  console.log('loading error', e)
-}
+const textureLoader = new THREE.TextureLoader()
 
-// With tinyPNG can make img smaller, but might look worse
-const textureLoader = new THREE.TextureLoader(loadingManager)
-const colorTexture = textureLoader.load('/textures/minecraft.png')
-const alphaTexture = textureLoader.load('/textures/door/alpha.jpg')
-const heightTexture = textureLoader.load('/textures/door/height.jpg')
-const normalTexture = textureLoader.load('/textures/door/normal.jpg')
-const ambientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
-const metalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
-const roughnessTexture = textureLoader.load('/textures/door/roughness.jpg')
-
-// colorTexture.repeat.x = 2
-// colorTexture.repeat.y = 3
-//
-// colorTexture.wrapS = THREE.RepeatWrapping
-// colorTexture.wrapT = THREE.MirroredRepeatWrapping
-//
-// colorTexture.offset.x = 0.5
-// colorTexture.offset.y = 0.5
-
-// colorTexture.rotation = Math.PI * .25
-// colorTexture.center.x = 0.5
-// colorTexture.center.y = 0.5
-
-colorTexture.generateMipmaps = false
-colorTexture.minFilter = THREE.NearestFilter
-colorTexture.magFilter = THREE.NearestFilter
+const doorColorTexture = textureLoader.load('/textures/door/color.jpg')
+const doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg')
+const doorHeightTexture = textureLoader.load('/textures/door/height.jpg')
+const doorNormalTexture = textureLoader.load('/textures/door/normal.jpg')
+const doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
+const doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg')
+const doorAmbientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
+const gradients3Texture = textureLoader.load('/textures/gradients/3.jpg')
+const matcapsTexture = textureLoader.load('/textures/matcaps/8.png')
 
 // Scene
 const scene: Scene = new THREE.Scene()
 
-// Object
-const geometry: BoxGeometry = new THREE.BoxGeometry(1, 1, 1)
-const material = new THREE.MeshBasicMaterial({map: colorTexture})
+// Objects
+// const material = new THREE.MeshBasicMaterial()
+// material.map = doorColorTexture
+// material.color = new THREE.Color(0x00ff00)
+// material.wireframe = true
+// material.transparent = true
+// material.opacity = .5
+// material.transparent = true
+// material.alphaMap = doorAlphaTexture
+// material.side = THREE.DoubleSide
 
-const mesh = new THREE.Mesh(geometry, material)
+// const material = new THREE.MeshNormalMaterial()
+// material.flatShading = true
+
+// const material = new THREE.MeshMatcapMaterial()
+// material.matcap = matcapsTexture
+
+// const material = new THREE.MeshDepthMaterial()
+
+// const material = new THREE.MeshLambertMaterial()
+
+const material = new THREE.MeshPhongMaterial()
+material.shininess = 100
+material.specular = new THREE.Color(0x1188ff)
+
+const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 16, 16),
+    material
+)
+
+const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    material
+)
+
+const torus = new THREE.Mesh(
+    new THREE.TorusGeometry(.3, .2, 16, 32),
+    material
+)
 
 @Options({})
 export default class BasicMaterials extends Vue {
@@ -77,18 +81,24 @@ export default class BasicMaterials extends Vue {
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
   controls: OrbitControls = {} as OrbitControls
 
-  // Debug
-  gui = new dat.GUI({width: 400}).close()
-  parameters = {
-    spin: () => {
-      gsap.to(mesh.rotation, {duration: 1, y: mesh.rotation.y + Math.PI * 2})
-    }
-  }
-
+  ambientLight = new THREE.AmbientLight(0xffffff, .5)
+  pointLight = new THREE.PointLight(0xffffff, .5)
 
   doc = document as FullScreenDocument
 
+  clock = new THREE.Clock();
+
   tick() {
+    const elapsedTime = this.clock.getElapsedTime()
+    // Update objects
+    sphere.rotation.x = 0.15 * elapsedTime
+    torus.rotation.x = 0.15 * elapsedTime
+    plane.rotation.x = 0.15 * elapsedTime
+
+    sphere.rotation.y = 0.1 * elapsedTime
+    torus.rotation.y = 0.1 * elapsedTime
+    plane.rotation.y = 0.1 * elapsedTime
+
     // Update controls
     this.controls.update()
 
@@ -98,29 +108,23 @@ export default class BasicMaterials extends Vue {
     window.requestAnimationFrame(this.tick)
   }
 
-  debug() {
-    this.gui.add(mesh.position, 'y')
-        .min(-3)
-        .max(3)
-        .step(0.01)
-        .name('elevation')
-
-    this.gui.add(mesh, 'visible')
-    this.gui.add(material, 'wireframe')
-
-    this.gui.addColor(material, 'color')
-
-    this.gui.add(this.parameters, 'spin')
-  }
-
   mounted() {
-    // object
-    scene.add(mesh)
+    // objects
+    sphere.position.x = -1.5
+    torus.position.x = 1.5
+    scene.add(sphere, plane, torus)
+
+    // Light
+    this.pointLight.position.x = 2
+    this.pointLight.position.y = 3
+    this.pointLight.position.z = 4
+    scene.add(this.pointLight)
+
+    scene.add(this.ambientLight)
 
     //camera
     // this.camera.position.set(2, 2, 2)
-    this.camera.position.z = 3
-    this.camera.lookAt(mesh.position)
+    this.camera.position.z = 2
     scene.add(this.camera)
 
     //renderer
@@ -143,14 +147,11 @@ export default class BasicMaterials extends Vue {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     })
 
-    // Full screen
-    fullscreenUtil(this.$refs.webgl)
-
-    //animations
+    // Tick
     this.tick()
 
-    // Debug
-    this.debug()
+    // Full screen
+    fullscreenUtil(this.$refs.webgl)
 
   }
 
