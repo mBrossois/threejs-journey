@@ -35,4 +35,9 @@ export default class NavSelect extends Vue {
   font-weight: bolder;
   font-size: 1.4rem;
 }
+
+.dropdown-menu {
+  max-height: 20em;
+  overflow-y: scroll;
+}
 </style>
