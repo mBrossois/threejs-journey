@@ -8,6 +8,7 @@ import BasicGeometries from "@/views/BasicGeometries.vue";
 import BasicDebugUi from "@/views/BasicDebugUi.vue";
 import BasicTextures from "@/views/BasicTextures.vue";
 import BasicMaterials from "@/views/BasicMaterials.vue";
+import Basic3dText from "@/views/Basic3dText.vue";
 
 export const RouteConstants: { title: string, sectionTitle?: boolean, url: string, component: Component }[] = [
   {title: 'Basics', sectionTitle: true, url: '', component: {} as Component},
@@ -20,4 +21,5 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "Debug UI", url: "/debug-ui", component: BasicDebugUi},
   {title: "Textures", url: "/textures", component: BasicTextures},
   {title: "Materials", url: "/materials", component: BasicMaterials},
+  {title: "3D text", url: "/3d-text", component: Basic3dText},
 ]
