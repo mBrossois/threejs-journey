@@ -5,40 +5,103 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
+import {CubeTexture, CubeTextureLoader, Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
 
-const textureLoader = new THREE.TextureLoader()
-const cubeTextureLoader = new THREE.CubeTextureLoader()
+@Options({})
+export default class BasicMaterials extends Vue {
+  $refs!: {
+    webgl: FullScreenDocumentElement
+  }
+  sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight
+  }
+  renderer: WebGLRenderer = {} as WebGLRenderer;
+  // fov between 45 & 75 || only shows objects between near and far values
+  camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
+  controls: OrbitControls = {} as OrbitControls
 
-const doorColorTexture = textureLoader.load('/textures/door/color.jpg')
-const doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg')
-const doorHeightTexture = textureLoader.load('/textures/door/height.jpg')
-const doorNormalTexture = textureLoader.load('/textures/door/normal.jpg')
-const doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
-const doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg')
-const doorAmbientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
-const matcapsTexture = textureLoader.load('/textures/matcaps/8.png')
-const gradientsTexture = textureLoader.load('/textures/gradients/3.jpg')
-gradientsTexture.minFilter = THREE.NearestFilter
-gradientsTexture.magFilter = THREE.NearestFilter
+  scene: Scene
+
+  ambientLight = new THREE.AmbientLight(0xffffff, .5)
+  pointLight = new THREE.PointLight(0xffffff, .5)
+
+  sphere: Mesh
+  plane: Mesh
+  torus: Mesh
+
+  material: any
+  environmentMapTexture: CubeTexture
+
+  gui = new dat.GUI({width: 300})
+
+  doc = document as FullScreenDocument
+
+  clock = new THREE.Clock();
+
+  rotateMesh(mesh: Mesh, elapsedTime: number) {
+    mesh.rotation.x = 0.15 * elapsedTime
+    mesh.rotation.y = 0.1 * elapsedTime
+  }
+
+  tick() {
+    const elapsedTime = this.clock.getElapsedTime()
+    // Update objects
+    this.rotateMesh(this.sphere, elapsedTime)
+    this.rotateMesh(this.plane, elapsedTime)
+    this.rotateMesh(this.torus, elapsedTime)
+
+    // Update controls
+    this.controls.update()
+
+    //renderer
+    this.renderer.render(this.scene, this.camera)
+
+    window.requestAnimationFrame(this.tick)
+  }
+
+  debug() {
+    this.gui.add(this.material, 'wireframe')
+    this.gui.add(this.material, 'metalness').min(0).max(1).step(0.0001)
+    this.gui.add(this.material, 'roughness').min(0).max(1).step(0.0001)
+    this.gui.add(this.material, 'aoMapIntensity').min(0).max(2).step(0.0001)
+    this.gui.add(this.material, 'displacementScale').min(0).max(1).step(0.0001)
+  }
+
+  textureLoaders() {
+    const textureLoader = new THREE.TextureLoader()
+    const cubeTextureLoader = new THREE.CubeTextureLoader()
+
+    const doorColorTexture = textureLoader.load('/textures/door/color.jpg')
+    const doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg')
+    const doorHeightTexture = textureLoader.load('/textures/door/height.jpg')
+    const doorNormalTexture = textureLoader.load('/textures/door/normal.jpg')
+    const doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
+    const doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg')
+    const doorAmbientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
+    const matcapsTexture = textureLoader.load('/textures/matcaps/8.png')
+    const gradientsTexture = textureLoader.load('/textures/gradients/3.jpg')
+    gradientsTexture.minFilter = THREE.NearestFilter
+    gradientsTexture.magFilter = THREE.NearestFilter
 // Can deactivate with NearestFilter
-gradientsTexture.generateMipmaps = false
+    gradientsTexture.generateMipmaps = false
 
-const environmentMapTexture = cubeTextureLoader.load([
-  'textures/environmentMaps/3/py.jpg',
-  'textures/environmentMaps/3/nx.jpg',
-  'textures/environmentMaps/3/px.jpg',
-  'textures/environmentMaps/3/ny.jpg',
-  'textures/environmentMaps/3/pz.jpg',
-  'textures/environmentMaps/3/nz.jpg',
-])
+    this.environmentMapTexture = cubeTextureLoader.load([
+      'textures/environmentMaps/3/py.jpg',
+      'textures/environmentMaps/3/nx.jpg',
+      'textures/environmentMaps/3/px.jpg',
+      'textures/environmentMaps/3/ny.jpg',
+      'textures/environmentMaps/3/pz.jpg',
+      'textures/environmentMaps/3/nz.jpg',
+    ])
 
-// Scene
-const scene: Scene = new THREE.Scene()
+  }
+
+  addObjects() {
 
 // Objects
 // const material = new THREE.MeshBasicMaterial()
@@ -83,107 +146,63 @@ const scene: Scene = new THREE.Scene()
 // material.alphaMap = doorAlphaTexture
 // material.transparent = true
 
-const material = new THREE.MeshStandardMaterial()
-material.metalness = 0.7
-material.roughness = 0.2
-material.envMap = environmentMapTexture
+    this.material = new THREE.MeshStandardMaterial()
+    this.material.metalness = 0.7
+    this.material.roughness = 0.2
+    this.material.envMap = this.environmentMapTexture
 
-const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 64, 64),
-    material
-)
+    this.sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.5, 64, 64),
+        this.material
+    )
 
-sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2))
+    this.sphere.geometry.setAttribute('uv2', new THREE.BufferAttribute(this.sphere.geometry.attributes.uv.array, 2))
 
-const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1, 100, 100),
-    material
-)
+    this.plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 1, 100, 100),
+        this.material
+    )
 
-plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2))
+    this.plane.geometry.setAttribute('uv2', new THREE.BufferAttribute(this.plane.geometry.attributes.uv.array, 2))
 
-const torus = new THREE.Mesh(
-    new THREE.TorusGeometry(.3, .2, 64, 128),
-    material
-)
+    this.torus = new THREE.Mesh(
+        new THREE.TorusGeometry(.3, .2, 64, 128),
+        this.material
+    )
 
-torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2))
-
-
-@Options({})
-export default class BasicMaterials extends Vue {
-  $refs!: {
-    webgl: FullScreenDocumentElement
-  }
-  sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight
-  }
-  renderer: WebGLRenderer = {} as WebGLRenderer;
-  // fov between 45 & 75 || only shows objects between near and far values
-  camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
-  controls: OrbitControls = {} as OrbitControls
-
-  ambientLight = new THREE.AmbientLight(0xffffff, .5)
-  pointLight = new THREE.PointLight(0xffffff, .5)
-
-  gui = new dat.GUI({width: 300})
-
-  doc = document as FullScreenDocument
-
-  clock = new THREE.Clock();
-
-  tick() {
-    const elapsedTime = this.clock.getElapsedTime()
-    // Update objects
-    sphere.rotation.x = 0.15 * elapsedTime
-    torus.rotation.x = 0.15 * elapsedTime
-    plane.rotation.x = 0.15 * elapsedTime
-
-    sphere.rotation.y = 0.1 * elapsedTime
-    torus.rotation.y = 0.1 * elapsedTime
-    plane.rotation.y = 0.1 * elapsedTime
-
-    // Update controls
-    this.controls.update()
-
-    //renderer
-    this.renderer.render(scene, this.camera)
-
-    window.requestAnimationFrame(this.tick)
-  }
-
-  debug() {
-    this.gui.add(material, 'wireframe')
-    this.gui.add(material, 'metalness').min(0).max(1).step(0.0001)
-    this.gui.add(material, 'roughness').min(0).max(1).step(0.0001)
-    this.gui.add(material, 'aoMapIntensity').min(0).max(2).step(0.0001)
-    this.gui.add(material, 'displacementScale').min(0).max(1).step(0.0001)
+    this.torus.geometry.setAttribute('uv2', new THREE.BufferAttribute(this.torus.geometry.attributes.uv.array, 2))
   }
 
   mounted() {
+    // Initialize scene
+    this.scene = new THREE.Scene()
+
+    // Add loaders
+    this.textureLoaders()
+
     // objects
-    sphere.position.x = -1.5
-    torus.position.x = 1.5
-    scene.add(sphere, plane, torus)
+    this.addObjects()
+    this.sphere.position.x = -1.5
+    this.torus.position.x = 1.5
+    this.scene.add(this.sphere, this.plane, this.torus)
 
     // Light
     this.pointLight.position.x = 2
     this.pointLight.position.y = 3
     this.pointLight.position.z = 4
-    scene.add(this.pointLight)
+    this.scene.add(this.pointLight)
 
-    scene.add(this.ambientLight)
+    this.scene.add(this.ambientLight)
 
     //camera
     // this.camera.position.set(2, 2, 2)
     this.camera.position.z = 2
-    scene.add(this.camera)
+    this.scene.add(this.camera)
 
     //renderer
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
 
     this.controls = new OrbitControls(this.camera, this.$refs.webgl);
     this.controls.enableDamping = true;

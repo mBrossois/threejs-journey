@@ -4,21 +4,9 @@
 
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
-import {Clock, Mesh, OrthographicCamera, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import * as THREE from "three";
-import gsap from "gsap";
-import {offset} from "@popperjs/core";
+import {Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
-
-const scene: Scene = new THREE.Scene()
-
-// Object
-const cube: Mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({color: 0xff0000}) )
-
-// Clock
-const clock: Clock = new THREE.Clock()
 
 @Options({})
 export default class BasicCameras extends Vue {
@@ -40,6 +28,14 @@ export default class BasicCameras extends Vue {
   // camera: OrthographicCamera = new THREE.OrthographicCamera(-1 * this.aspectRatio, 1 * this.aspectRatio, 1, -1, 0.1, 100)
   controls: OrbitControls = {} as OrbitControls
 
+  scene: Scene
+
+// Object
+  cube: Mesh
+
+// Clock
+//   const clock: Clock = new THREE.Clock()
+
   tick() {
     // Clock
     // const elapsedTime = clock.getElapsedTime()
@@ -60,25 +56,31 @@ export default class BasicCameras extends Vue {
     // cube.position.y = this.cursor.y
 
     //renderer
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
 
     window.requestAnimationFrame(this.tick)
   }
 
   mounted() {
+    // Initialize scene
+    this.scene = new THREE.Scene()
+
     // object
-    scene.add(cube)
+    this.cube = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshBasicMaterial({color: 0xff0000}))
+    this.scene.add(this.cube)
 
     //camera
     // this.camera.position.set(2, 2, 2)
     this.camera.position.z = 3
-    this.camera.lookAt(cube.position)
-    scene.add(this.camera)
+    this.camera.lookAt(this.cube.position)
+    this.scene.add(this.camera)
 
     //renderer
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
 
     // gsap.to(cube.position, {duration: 1, delay: 1, x: 2})
 

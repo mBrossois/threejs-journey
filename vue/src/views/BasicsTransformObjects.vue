@@ -7,19 +7,18 @@ import {Options, Vue} from "vue-class-component";
 import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import * as THREE from "three";
 
-const scene: Scene = new THREE.Scene()
-
 @Options({})
 export default class BasicsTransformObjects extends Vue{
   sizes = {
     width: 800,
     height: 600
   }
-  renderer?: WebGLRenderer;
+  renderer: WebGLRenderer;
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height);
   $refs!: {
     webgl: HTMLCanvasElement
   }
+  scene: Scene
   explanation() {
     console.log('explanation')
     // const geometry = new THREE.BoxGeometry(1, 1, 1)
@@ -45,11 +44,12 @@ export default class BasicsTransformObjects extends Vue{
     // this.camera.lookAt(mesh.position)
   }
   mounted() {
+    this.scene = new THREE.Scene()
 
     const group = new THREE.Group()
     group.position.set(1, 1, -1)
     group.rotation.set(0, Math.PI * 0.25, 0)
-    scene.add(group)
+    this.scene.add(group)
 
     const cube1 = new THREE.Mesh(
         new THREE.BoxGeometry(1, 1, 1),
@@ -73,7 +73,7 @@ export default class BasicsTransformObjects extends Vue{
     group.add(cube3)
     //axes helper
     const axesHelper = new THREE.AxesHelper(2)
-    scene.add(axesHelper)
+    this.scene.add(axesHelper)
 
     // Camera
     this.camera.position.z = 3
@@ -84,7 +84,7 @@ export default class BasicsTransformObjects extends Vue{
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
   }
 }
 </script>
