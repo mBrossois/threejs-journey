@@ -9,16 +9,6 @@ import {Clock, Mesh, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 
-const scene: Scene = new THREE.Scene()
-
-// Object
-const cube: Mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({color: 0xff0000}))
-
-// Clock
-const clock: Clock = new THREE.Clock()
-
 @Options({})
 export default class BasicFullscreen extends Vue {
   $refs!: {
@@ -32,37 +22,51 @@ export default class BasicFullscreen extends Vue {
     x: 0,
     y: 0
   }
-  renderer: WebGLRenderer = {} as WebGLRenderer;
+  renderer: WebGLRenderer
   // fov between 45 & 75 || only shows objects between near and far values
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
   controls: OrbitControls = {} as OrbitControls
 
   doc = document as FullScreenDocument
 
+  scene: Scene
+
+  // Object
+  cube: Mesh
+
+  // Clock
+  clock: Clock = new THREE.Clock()
+
   tick() {
     // Update controls
     this.controls.update()
 
     //renderer
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
 
     window.requestAnimationFrame(this.tick)
   }
 
   mounted() {
+    // Initialize scene
+    this.scene = new THREE.Scene()
+
     // object
-    scene.add(cube)
+    this.cube = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshBasicMaterial({color: 0xff0000}))
+    this.scene.add(this.cube)
 
     //camera
     // this.camera.position.set(2, 2, 2)
     this.camera.position.z = 3
-    this.camera.lookAt(cube.position)
-    scene.add(this.camera)
+    this.camera.lookAt(this.cube.position)
+    this.scene.add(this.camera)
 
     //renderer
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
-    this.renderer.render(scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
 
     this.controls = new OrbitControls(this.camera, this.$refs.webgl);
     this.controls.enableDamping = true;
