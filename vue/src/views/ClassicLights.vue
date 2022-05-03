@@ -46,6 +46,11 @@ export default class ClassicLights extends Vue {
   plane: Mesh
 
   ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  hemisphereLight = new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.3);
+  directionalLight = new THREE.DirectionalLight(0x00fffc,0.3)
+  pointLight = new THREE.PointLight(0xff9000, 0.5, 10, 2 )
+  rectAreaLight = new THREE.RectAreaLight(0x4e00ff, 2, 1, 1)
+  spotLight = new THREE.SpotLight(0x78ff00, 0.5, 10, Math.PI * 0.1,  0.25, 1)
 
   gui = new dat.GUI({width: 300})
 
@@ -77,14 +82,29 @@ export default class ClassicLights extends Vue {
   debug() {
     this.gui.close()
     this.gui.add(this.ambientLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.directionalLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.hemisphereLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.pointLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.pointLight, 'distance').min(0).max(15).step(0.01)
+    this.gui.add(this.pointLight, 'decay').min(0).max(3).step(0.005)
+    this.gui.add(this.rectAreaLight, 'intensity').min(0).max(3).step(0.001)
+    this.gui.add(this.rectAreaLight, 'width').min(0).max(3).step(0.001)
+    this.gui.add(this.rectAreaLight, 'height').min(0).max(3).step(0.001)
+    this.gui.add(this.spotLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.spotLight.target.position, 'x').min(-5).max(5).step(0.001)
+
   }
 
   setupLights() {
-    this.scene.add(this.ambientLight)
+    this.directionalLight.position.set(1, 0.25, 0)
+    this.pointLight.position.set(1, -0.5, 1)
+    this.rectAreaLight.position .set(-1.5, 0, 1.5)
+    this.rectAreaLight.lookAt(new THREE.Vector3())
+    this.spotLight.position.set(0, 2, 3)
+    this.spotLight.target.position.x = -.75
 
-    const directionalLight = new THREE.DirectionalLight(0x00fffc,0.3)
-    directionalLight.position.set(1, 0.25, 0)
-    this.scene.add(directionalLight)
+    this.scene.add(this.ambientLight, this.hemisphereLight, this.directionalLight, this.pointLight, this.rectAreaLight, this.spotLight, this.spotLight.target)
+
   }
 
   setupMaterial() {
