@@ -1,26 +1,17 @@
-\<template>
+\
+<template>
   <canvas class="webgl" ref="webgl"/>
 </template>
 
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {
-  AmbientLight,
-  Mesh,
-  MeshMatcapMaterial,
-  MeshStandardMaterial,
-  PerspectiveCamera,
-  Scene,
-  TorusGeometry,
-  WebGLRenderer
-} from "three";
+import {Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
-import {FontLoader} from "three/examples/jsm/loaders/FontLoader";
-import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry";
+import {RectAreaLightHelper} from "three/examples/jsm/helpers/RectAreaLightHelper";
 
 @Options({})
 export default class ClassicLights extends Vue {
@@ -45,12 +36,15 @@ export default class ClassicLights extends Vue {
   torus: Mesh
   plane: Mesh
 
+  // Low cost
   ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   hemisphereLight = new THREE.HemisphereLight(0xff0000, 0x0000ff, 0.3);
-  directionalLight = new THREE.DirectionalLight(0x00fffc,0.3)
-  pointLight = new THREE.PointLight(0xff9000, 0.5, 10, 2 )
+  // Medium cost
+  directionalLight = new THREE.DirectionalLight(0x00fffc, 0.3)
+  pointLight = new THREE.PointLight(0xff9000, 0.5, 10, 2)
+  // High cost
   rectAreaLight = new THREE.RectAreaLight(0x4e00ff, 2, 1, 1)
-  spotLight = new THREE.SpotLight(0x78ff00, 0.5, 10, Math.PI * 0.1,  0.25, 1)
+  spotLight = new THREE.SpotLight(0x78ff00, 0.5, 10, Math.PI * 0.1, 0.25, 1)
 
   gui = new dat.GUI({width: 300})
 
@@ -84,9 +78,9 @@ export default class ClassicLights extends Vue {
     this.gui.add(this.ambientLight, 'intensity').min(0).max(1).step(0.001)
     this.gui.add(this.directionalLight, 'intensity').min(0).max(1).step(0.001)
     this.gui.add(this.hemisphereLight, 'intensity').min(0).max(1).step(0.001)
-    this.gui.add(this.pointLight, 'intensity').min(0).max(1).step(0.001)
-    this.gui.add(this.pointLight, 'distance').min(0).max(15).step(0.01)
-    this.gui.add(this.pointLight, 'decay').min(0).max(3).step(0.005)
+    this.gui.add(this.pointLight, 'intensity').name('ptIntensity').min(0).max(1).step(0.001)
+    this.gui.add(this.pointLight, 'distance').name('ptDistance').min(0).max(15).step(0.01)
+    this.gui.add(this.pointLight, 'decay').name('ptDecay').min(0).max(3).step(0.005)
     this.gui.add(this.rectAreaLight, 'intensity').min(0).max(3).step(0.001)
     this.gui.add(this.rectAreaLight, 'width').min(0).max(3).step(0.001)
     this.gui.add(this.rectAreaLight, 'height').min(0).max(3).step(0.001)
@@ -98,12 +92,25 @@ export default class ClassicLights extends Vue {
   setupLights() {
     this.directionalLight.position.set(1, 0.25, 0)
     this.pointLight.position.set(1, -0.5, 1)
-    this.rectAreaLight.position .set(-1.5, 0, 1.5)
+    this.rectAreaLight.position.set(-1.5, 0, 1.5)
     this.rectAreaLight.lookAt(new THREE.Vector3())
     this.spotLight.position.set(0, 2, 3)
     this.spotLight.target.position.x = -.75
 
     this.scene.add(this.ambientLight, this.hemisphereLight, this.directionalLight, this.pointLight, this.rectAreaLight, this.spotLight, this.spotLight.target)
+
+    // Helpers
+    const hemisphereLightHelper = new THREE.HemisphereLightHelper(this.hemisphereLight, 0.2)
+    const directionalLightHelper = new THREE.DirectionalLightHelper(this.directionalLight, 0.2)
+    const pointLightHelper = new THREE.PointLightHelper(this.pointLight, 0.2)
+    const spotLightHelper = new THREE.SpotLightHelper(this.spotLight)
+    const rectAreaLightHelper = new RectAreaLightHelper(this.rectAreaLight)
+
+    this.scene.add(hemisphereLightHelper, directionalLightHelper, pointLightHelper, spotLightHelper, rectAreaLightHelper)
+
+    window.requestAnimationFrame(() => {
+      spotLightHelper.update()
+    })
 
   }
 
@@ -114,12 +121,12 @@ export default class ClassicLights extends Vue {
   }
 
   setupObjects() {
-  // Objects
+    // Objects
     this.sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.5, 32, 32),
         this.material
     )
-    this.sphere.position.x = - 1.5
+    this.sphere.position.x = -1.5
 
     this.cube = new THREE.Mesh(
         new THREE.BoxGeometry(0.75, 0.75, 0.75),
@@ -136,8 +143,8 @@ export default class ClassicLights extends Vue {
         new THREE.PlaneGeometry(5, 5),
         this.material
     )
-    this.plane.rotation.x = - Math.PI * 0.5
-    this.plane.position.y = - 0.65
+    this.plane.rotation.x = -Math.PI * 0.5
+    this.plane.position.y = -0.65
 
     this.scene.add(this.sphere, this.cube, this.torus, this.plane)
 
