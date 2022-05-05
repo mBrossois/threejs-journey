@@ -10,6 +10,7 @@ import BasicTextures from "@/views/BasicTextures.vue";
 import BasicMaterials from "@/views/BasicMaterials.vue";
 import Basic3dText from "@/views/Basic3dText.vue";
 import ClassicLights from "@/views/ClassicLights.vue";
+import ClassicShadows from "@/views/ClassicShadows.vue";
 
 export const RouteConstants: { title: string, sectionTitle?: boolean, url: string, component: Component }[] = [
   {title: 'Basics', sectionTitle: true, url: '', component: {} as Component},
@@ -25,4 +26,5 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "3D text", url: "/3d-text", component: Basic3dText},
   {title: "Classic techniques", sectionTitle: true, url: "", component: {} as Component},
   {title: "Lights", url: "/lights", component: ClassicLights},
+  {title: "Shadows", url: "/shadows", component: ClassicShadows},
 ]
