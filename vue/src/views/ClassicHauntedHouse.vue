@@ -6,22 +6,11 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {
-  Group,
-  Mesh, MeshBasicMaterial,
-  MeshStandardMaterial,
-  PCFSoftShadowMap,
-  PerspectiveCamera,
-  PlaneGeometry,
-  Scene,
-  Texture,
-  WebGLRenderer
-} from "three";
+import {Group, Mesh, PerspectiveCamera, Scene, Texture, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
-import {RectAreaLightHelper} from "three/examples/jsm/helpers/RectAreaLightHelper";
 
 @Options({})
 export default class ClassicHauntedHouse extends Vue {
@@ -57,15 +46,33 @@ export default class ClassicHauntedHouse extends Vue {
   graveGeometry = new THREE.BoxGeometry(0.5, 1, 0.1)
   graveMaterial = new THREE.MeshStandardMaterial({color: '#b2b6b1'})
 
-  // Textures
   floor: Mesh
 
+  // Textures
+  // Door
+  doorColorTexture: Texture
+  doorAlphaTexture: Texture
+  doorAmbientOcclusionTexture: Texture
+  doorHeightTexture: Texture
+  doorMetalnessTexture: Texture
+  doorNormalTexture: Texture
+  doorRoughnessTexture: Texture
+  // House
+  bricksAmbientOcclusionTexture: Texture
+  bricksColorTexture: Texture
+  bricksNormalTexture: Texture
+  bricksRoughnessTexture: Texture
+  // Grass
+  grassAmbientOcclusionTexture: Texture
+  grassColorTexture: Texture
+  grassNormalTexture: Texture
+  grassRoughnessTexture: Texture
 
   // Low cost
   ambientLight = new THREE.AmbientLight('#b9d5ff', 0.12);
   // Medium cost
   moonLight = new THREE.DirectionalLight('#b9d5ff', 0.12)
-  doorLight = new THREE.PointLight('#ff7d46',  1,6)
+  doorLight = new THREE.PointLight('#ff7d46', 1, 6)
 
   // Fog
   fog = new THREE.Fog(this.backgroundColor, 1, 15)
@@ -79,7 +86,7 @@ export default class ClassicHauntedHouse extends Vue {
   tick() {
     const elapsedTime = this.clock.getElapsedTime()
 
-        // Update controls
+    // Update controls
     this.controls.update()
 
     //renderer
@@ -102,6 +109,42 @@ export default class ClassicHauntedHouse extends Vue {
 
   setupTextures() {
     const textureLoader = new THREE.TextureLoader()
+
+    // Door
+    this.doorColorTexture = textureLoader.load('/textures/door/color.jpg')
+    this.doorAlphaTexture = textureLoader.load('/textures/door/alpha.jpg')
+    this.doorAmbientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg')
+    this.doorHeightTexture = textureLoader.load('/textures/door/height.jpg')
+    this.doorMetalnessTexture = textureLoader.load('/textures/door/metalness.jpg')
+    this.doorNormalTexture = textureLoader.load('/textures/door/normal.jpg')
+    this.doorRoughnessTexture = textureLoader.load('/textures/door/roughness.jpg')
+
+    // Bricks
+    this.bricksAmbientOcclusionTexture = textureLoader.load('/textures/bricks/ambientOcclusion.jpg')
+    this.bricksColorTexture = textureLoader.load('/textures/bricks/color.jpg')
+    this.bricksNormalTexture = textureLoader.load('/textures/bricks/normal.jpg')
+    this.bricksRoughnessTexture = textureLoader.load('/textures/bricks/roughness.jpg')
+
+    // Grass
+    this.grassAmbientOcclusionTexture = textureLoader.load('/textures/grass/ambientOcclusion.jpg')
+    this.grassColorTexture = textureLoader.load('/textures/grass/color.jpg')
+    this.grassNormalTexture = textureLoader.load('/textures/grass/normal.jpg')
+    this.grassRoughnessTexture = textureLoader.load('/textures/grass/roughness.jpg')
+
+    this.grassColorTexture.repeat.set(8, 8)
+    this.grassNormalTexture.repeat.set(8, 8)
+    this.grassRoughnessTexture.repeat.set(8, 8)
+    this.grassAmbientOcclusionTexture.repeat.set(8, 8)
+
+    this.grassColorTexture.wrapS = THREE.RepeatWrapping
+    this.grassNormalTexture.wrapS = THREE.RepeatWrapping
+    this.grassRoughnessTexture.wrapS = THREE.RepeatWrapping
+    this.grassAmbientOcclusionTexture.wrapS = THREE.RepeatWrapping
+
+    this.grassColorTexture.wrapT = THREE.RepeatWrapping
+    this.grassNormalTexture.wrapT = THREE.RepeatWrapping
+    this.grassRoughnessTexture.wrapT = THREE.RepeatWrapping
+    this.grassAmbientOcclusionTexture.wrapT = THREE.RepeatWrapping
 
   }
 
@@ -140,9 +183,16 @@ export default class ClassicHauntedHouse extends Vue {
     // Walls
     this.walls = new THREE.Mesh(
         new THREE.BoxGeometry(4, 2.5, 4),
-        new THREE.MeshStandardMaterial({color: '#ac8e82'})
+        new THREE.MeshStandardMaterial({
+          transparent: true,
+          map: this.bricksColorTexture,
+          normalMap: this.bricksNormalTexture,
+          roughnessMap: this.bricksRoughnessTexture,
+          aoMap: this.doorAmbientOcclusionTexture
+        })
     )
     this.walls.position.y = 2.5 / 2
+    this.walls.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(this.walls.geometry.attributes.uv.array, 2))
 
     // Roofs
     this.roof = new THREE.Mesh(
@@ -154,9 +204,20 @@ export default class ClassicHauntedHouse extends Vue {
 
     // Door
     this.door = new THREE.Mesh(
-        new THREE.PlaneGeometry(2, 2),
-        new THREE.MeshStandardMaterial({color: '#b34f45'})
+        new THREE.PlaneGeometry(2.2, 2.2, 100, 100),
+        new THREE.MeshStandardMaterial({
+          transparent: true,
+          map: this.doorColorTexture,
+          normalMap: this.doorNormalTexture,
+          alphaMap: this.doorAlphaTexture,
+          aoMap: this.doorAmbientOcclusionTexture,
+          displacementMap: this.doorHeightTexture,
+          displacementScale: 0.1,
+          metalnessMap: this.doorMetalnessTexture,
+          roughnessMap: this.doorMetalnessTexture
+        })
     )
+    this.door.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(this.door.geometry.attributes.uv.array, 2))
     this.door.position.y = 2 / 2
     this.door.position.z = 2 + 0.01
 
@@ -196,19 +257,25 @@ export default class ClassicHauntedHouse extends Vue {
     // Graves
     this.graves = new THREE.Group()
 
-    for(let i = 0 ; i < 50; i++) {
+    for (let i = 0; i < 50; i++) {
       this.setupGrave()
     }
 
     this.floor = new THREE.Mesh(
         new THREE.PlaneGeometry(20, 20),
-        new THREE.MeshStandardMaterial({color: '#a9c388'})
-
+        new THREE.MeshStandardMaterial({
+          transparent: true,
+          map: this.grassColorTexture,
+          normalMap: this.grassNormalTexture,
+          roughnessMap: this.grassRoughnessTexture,
+          aoMap: this.grassAmbientOcclusionTexture
+        })
     )
+    this.floor.geometry.setAttribute('uv2', new THREE.Float32BufferAttribute(this.floor.geometry.attributes.uv.array, 2))
     this.floor.rotation.x = -Math.PI * 0.5
     this.floor.position.y = 0
 
-    this.scene.add(this.floor, this.house, this.graves  )
+    this.scene.add(this.floor, this.house, this.graves)
 
   }
 
