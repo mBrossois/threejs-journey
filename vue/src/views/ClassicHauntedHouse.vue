@@ -37,10 +37,14 @@ export default class ClassicHauntedHouse extends Vue {
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
   controls: OrbitControls = {} as OrbitControls
 
+  backgroundColor = '#262837'
+
   scene: Scene
 
-  // Objects house
   house: Group
+  graves: Group
+
+  // Objects house
   walls: Mesh
   roof: Mesh
   door: Mesh
@@ -49,14 +53,22 @@ export default class ClassicHauntedHouse extends Vue {
   bushGeometry = new THREE.SphereGeometry(1, 16, 16)
   bushMaterial = new THREE.MeshStandardMaterial({color: '#89c854'})
 
+  // Grave
+  graveGeometry = new THREE.BoxGeometry(0.5, 1, 0.1)
+  graveMaterial = new THREE.MeshStandardMaterial({color: '#b2b6b1'})
+
   // Textures
   floor: Mesh
 
 
   // Low cost
-  ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
+  ambientLight = new THREE.AmbientLight('#b9d5ff', 0.12);
   // Medium cost
-  moonLight = new THREE.DirectionalLight('#ffffff', 0.5)
+  moonLight = new THREE.DirectionalLight('#b9d5ff', 0.12)
+  doorLight = new THREE.PointLight('#ff7d46',  1,6)
+
+  // Fog
+  fog = new THREE.Fog(this.backgroundColor, 1, 15)
 
   gui = new dat.GUI({width: 300})
 
@@ -83,7 +95,8 @@ export default class ClassicHauntedHouse extends Vue {
     this.gui.add(this.moonLight.position, 'x').min(-5).max(5).step(0.001)
     this.gui.add(this.moonLight.position, 'y').min(-5).max(5).step(0.001)
     this.gui.add(this.moonLight.position, 'z').min(-5).max(5).step(0.001)
-
+    this.gui.add(this.doorLight, 'intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.doorLight, 'distance').min(0).max(10).step(0.001)
 
   }
 
@@ -94,9 +107,31 @@ export default class ClassicHauntedHouse extends Vue {
 
   setupLights() {
     this.moonLight.position.set(4, 5, -2)
-
+    this.doorLight.position.set(0, 2.2, 2.7)
 
     this.scene.add(this.ambientLight, this.moonLight)
+  }
+
+  setupGrave() {
+    const angle = Math.random() * Math.PI * 2 // Random angle
+    const radius = 3 + Math.random() * 6 // Random radius
+    const x = Math.cos(angle) * radius
+    const z = Math.sin(angle) * radius
+
+    const grave = new THREE.Mesh(
+        this.graveGeometry,
+        this.graveMaterial
+    )
+    grave.position.x = x
+    grave.position.z = z
+
+    grave.rotation.z = (Math.random() - 0.5) * 0.4
+    grave.rotation.y = (Math.random() - 0.5)
+
+
+    this.graves.position.y = 1 / 2
+
+    this.graves.add(grave)
   }
 
   setupObjects() {
@@ -155,8 +190,15 @@ export default class ClassicHauntedHouse extends Vue {
     bush4.position.set(-1, 0.05, 2.6)
 
     // Everything is a house!
-    this.house.add(this.walls, this.roof, this.door, bush1, bush2, bush3, bush4)
+    this.house.add(this.walls, this.roof, this.door, bush1, bush2, bush3, bush4, this.doorLight)
 
+
+    // Graves
+    this.graves = new THREE.Group()
+
+    for(let i = 0 ; i < 50; i++) {
+      this.setupGrave()
+    }
 
     this.floor = new THREE.Mesh(
         new THREE.PlaneGeometry(20, 20),
@@ -166,7 +208,7 @@ export default class ClassicHauntedHouse extends Vue {
     this.floor.rotation.x = -Math.PI * 0.5
     this.floor.position.y = 0
 
-    this.scene.add(this.floor, this.house )
+    this.scene.add(this.floor, this.house, this.graves  )
 
   }
 
@@ -174,6 +216,7 @@ export default class ClassicHauntedHouse extends Vue {
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setClearColor(this.backgroundColor)
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -193,6 +236,7 @@ export default class ClassicHauntedHouse extends Vue {
   mounted() {
     // Initialize scene
     this.scene = new THREE.Scene()
+    this.scene.fog = this.fog
 
     // Load texture
     this.setupTextures()
