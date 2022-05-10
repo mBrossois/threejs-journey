@@ -6,7 +6,7 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {Group, Mesh, PerspectiveCamera, Scene, Texture, WebGLRenderer} from "three";
+import {Group, Mesh, PerspectiveCamera, PointLight, Scene, Texture, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
@@ -39,6 +39,10 @@ export default class ClassicHauntedHouse extends Vue {
   door: Mesh
 
   // Bush
+  bush1: Mesh
+  bush2: Mesh
+  bush3: Mesh
+  bush4: Mesh
   bushGeometry = new THREE.SphereGeometry(1, 16, 16)
   bushMaterial = new THREE.MeshStandardMaterial({color: '#89c854'})
 
@@ -73,6 +77,10 @@ export default class ClassicHauntedHouse extends Vue {
   // Medium cost
   moonLight = new THREE.DirectionalLight('#b9d5ff', 0.12)
   doorLight = new THREE.PointLight('#ff7d46', 1, 6)
+  // Ghosts
+  ghost1 = new THREE.PointLight('#ff00ff', 2, 3)
+  ghost2 = new THREE.PointLight('#00ffff', 2, 3)
+  ghost3 = new THREE.PointLight('#ffff00', 2, 3)
 
   // Fog
   fog = new THREE.Fog(this.backgroundColor, 1, 15)
@@ -83,8 +91,19 @@ export default class ClassicHauntedHouse extends Vue {
 
   clock = new THREE.Clock();
 
+  updateGhost(ghost: PointLight, ghostAngle: number, elapsedTime: number, horizontalRadius: number, verticalRadius: number) {
+    ghost.position.x = Math.cos(ghostAngle) * horizontalRadius
+    ghost.position.z = Math.sin(ghostAngle) * (horizontalRadius * 0.8)
+    ghost.position.y = 0.2 + Math.sin(elapsedTime) + verticalRadius
+  }
+
   tick() {
     const elapsedTime = this.clock.getElapsedTime()
+
+    // Update ghosts
+   this.updateGhost(this.ghost1, elapsedTime * 0.5, elapsedTime * 0.8, 4, 0)
+   this.updateGhost(this.ghost2, - elapsedTime * 0.32, elapsedTime * 0.5, 5, Math.sin(elapsedTime*2.5))
+   this.updateGhost(this.ghost3, - elapsedTime * 0.18, elapsedTime * 0.4, (7 + Math.sin(elapsedTime * 0.32)), Math.sin(elapsedTime*2.5))
 
     // Update controls
     this.controls.update()
@@ -104,6 +123,9 @@ export default class ClassicHauntedHouse extends Vue {
     this.gui.add(this.moonLight.position, 'z').min(-5).max(5).step(0.001)
     this.gui.add(this.doorLight, 'intensity').min(0).max(1).step(0.001)
     this.gui.add(this.doorLight, 'distance').min(0).max(10).step(0.001)
+    this.gui.add(this.ghost1, 'intensity').name('Purple ghost intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.ghost2, 'intensity').name('Cyan ghost intensity').min(0).max(1).step(0.001)
+    this.gui.add(this.ghost3, 'intensity').name('Yellow ghost intensity').min(0).max(1).step(0.001)
 
   }
 
@@ -152,7 +174,7 @@ export default class ClassicHauntedHouse extends Vue {
     this.moonLight.position.set(4, 5, -2)
     this.doorLight.position.set(0, 2.2, 2.7)
 
-    this.scene.add(this.ambientLight, this.moonLight)
+    this.scene.add(this.ambientLight, this.moonLight, this.ghost1, this.ghost2, this.ghost3)
   }
 
   setupGrave() {
@@ -171,6 +193,7 @@ export default class ClassicHauntedHouse extends Vue {
     grave.rotation.z = (Math.random() - 0.5) * 0.4
     grave.rotation.y = (Math.random() - 0.5)
 
+    grave.castShadow = true
 
     this.graves.position.y = 1 / 2
 
@@ -222,36 +245,36 @@ export default class ClassicHauntedHouse extends Vue {
     this.door.position.z = 2 + 0.01
 
     // Bushes
-    const bush1 = new THREE.Mesh(
+    this.bush1 = new THREE.Mesh(
         this.bushGeometry,
         this.bushMaterial
     )
-    bush1.scale.set(0.5, 0.5, 0.5)
-    bush1.position.set(0.8, 0.2, 2.2)
+    this.bush1.scale.set(0.5, 0.5, 0.5)
+    this.bush1.position.set(0.8, 0.2, 2.2)
 
-    const bush2 = new THREE.Mesh(
+    this.bush2 = new THREE.Mesh(
         this.bushGeometry,
         this.bushMaterial
     )
-    bush2.scale.set(0.25, 0.25, 0.25)
-    bush2.position.set(1.4, 0.1, 2.1)
+    this.bush2.scale.set(0.25, 0.25, 0.25)
+    this.bush2.position.set(1.4, 0.1, 2.1)
 
-    const bush3 = new THREE.Mesh(
+    this.bush3 = new THREE.Mesh(
         this.bushGeometry,
         this.bushMaterial
     )
-    bush3.scale.set(0.4, 0.4, 0.4)
-    bush3.position.set(-0.8, 0.1, 2.2)
+    this.bush3.scale.set(0.4, 0.4, 0.4)
+    this.bush3.position.set(-0.8, 0.1, 2.2)
 
-    const bush4 = new THREE.Mesh(
+    this.bush4 = new THREE.Mesh(
         this.bushGeometry,
         this.bushMaterial
     )
-    bush4.scale.set(0.15, 0.15, 0.15)
-    bush4.position.set(-1, 0.05, 2.6)
+    this.bush4.scale.set(0.15, 0.15, 0.15)
+    this.bush4.position.set(-1, 0.05, 2.6)
 
     // Everything is a house!
-    this.house.add(this.walls, this.roof, this.door, bush1, bush2, bush3, bush4, this.doorLight)
+    this.house.add(this.walls, this.roof, this.door, this.bush1, this.bush2, this.bush3, this.bush4, this.doorLight)
 
 
     // Graves
@@ -277,6 +300,37 @@ export default class ClassicHauntedHouse extends Vue {
 
     this.scene.add(this.floor, this.house, this.graves)
 
+  }
+
+  addShadowProperties(light: any) {
+    light.shadow.mapSize.set(256, 256)
+    light.shadow.camera.far = 7
+  }
+
+  setUpShadow() {
+    // Enable shadows
+    this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
+    this.moonLight.castShadow = true
+    this.doorLight.castShadow = true
+    this.ghost1.castShadow = true
+    this.ghost2.castShadow = true
+    this.ghost3.castShadow = true
+
+    this.walls.castShadow = true
+    this.bush1.castShadow = true
+    this.bush2.castShadow = true
+    this.bush3.castShadow = true
+    this.bush4.castShadow = true
+
+    this.floor.receiveShadow = true
+
+    // Shadow properties
+    this.addShadowProperties(this.doorLight)
+    this.addShadowProperties(this.ghost1)
+    this.addShadowProperties(this.ghost2)
+    this.addShadowProperties(this.ghost3)
   }
 
   setupRenderer() {
@@ -329,6 +383,9 @@ export default class ClassicHauntedHouse extends Vue {
 
     // Resizing
     this.resizePage()
+
+    // Shadows
+    this.setUpShadow()
 
     // Tick
     this.tick()
