@@ -53,8 +53,9 @@ export default class ClassicParticles extends Vue {
     // this.particles.rotation.y = Math.sin(elapsedTime * 0.2)
     // this.particles.position.y = - Math.tan(elapsedTime * 0.2)
     for(let i = 0; i < this.count; i++) {
-
-      this.particleGeometry.attributes.position.setY(i, Math.sin(elapsedTime))
+      // This is supposed to be bad idea, not good for cpu (better with custom shader)
+      const x = this.particleGeometry.attributes.position.getX(i)
+      this.particleGeometry.attributes.position.setY(i, Math.sin(elapsedTime + x))
     }
     
     this.particleGeometry.attributes.position.needsUpdate = true
