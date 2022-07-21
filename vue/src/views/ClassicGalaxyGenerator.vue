@@ -13,6 +13,7 @@ import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
 import {RectAreaLightHelper} from "three/examples/jsm/helpers/RectAreaLightHelper";
 import { tsThisType } from "@babel/types";
+import { randFloat } from "three/src/math/MathUtils";
 
 @Options({})
 export default class ClassicGalaxyGenerator extends Vue {
@@ -46,7 +47,14 @@ export default class ClassicGalaxyGenerator extends Vue {
 
   parameters = {
     count: 100000,
-    size: 0.01
+    size: 0.01,
+    radius: 5,
+    branches: 3,
+    spin: 1,
+    randomness: 0.2,
+    randomnessPower: 3,
+    insideColor: '#ff6030',
+    outsideColor: '#1b3984'
     }
 
   tick() {
@@ -66,6 +74,14 @@ export default class ClassicGalaxyGenerator extends Vue {
 
     this.gui.add(this.parameters, 'count').min(100).max(1000000).step(100).onFinishChange(this.generateGalaxy)
     this.gui.add(this.parameters, 'size').min(0.001).max(0.1).step(0.001).onFinishChange(this.generateGalaxy)
+    this.gui.add(this.parameters, 'radius').min(0.01).max(20).step(0.01).onFinishChange(this.generateGalaxy)
+    this.gui.add(this.parameters, 'branches').min(2).max(20).step(1).onFinishChange(this.generateGalaxy)
+    this.gui.add(this.parameters, 'spin').min(-5).max(5).step(0.001).onFinishChange(this.generateGalaxy)
+    this.gui.add(this.parameters, 'randomness').min(0).max(2).step(0.001).onFinishChange(this.generateGalaxy)
+    this.gui.add(this.parameters, 'randomnessPower').min(1).max(10).step(0.001).onFinishChange(this.generateGalaxy)
+    this.gui.addColor(this.parameters, 'insideColor').onFinishChange(this.generateGalaxy)
+    this.gui.addColor(this.parameters, 'outsideColor').onFinishChange(this.generateGalaxy)
+    
   }
 
   setupLights() {
@@ -102,21 +118,47 @@ export default class ClassicGalaxyGenerator extends Vue {
     this.galaxyGeometry = new THREE.BufferGeometry();
 
     const galaxyPoints = new Float32Array(this.parameters.count * 3)
+    const galaxyColors = new Float32Array(this.parameters.count * 3)
+
+    const colorInsde = new THREE.Color(this.parameters.insideColor)
+    const colorOutside = new THREE.Color(this.parameters.outsideColor)
+
     for(let i = 0; i < this.parameters.count; i++) {
       const i3 = i * 3
-      galaxyPoints[i3] = (Math.random() - 0.5) * 3
-      galaxyPoints[i3 + 1] = (Math.random() - 0.5) * 3
-      galaxyPoints[i3 + 2] = (Math.random() - 0.5) * 3
+
+      // Position
+      const radius = Math.random() * this.parameters.radius
+      const spinAngle = radius * this.parameters.spin
+      const branchAngle = (i % this.parameters.branches) / this.parameters.branches * Math.PI * 2
+
+      const randomX = Math.pow(Math.random(), this.parameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) 
+      const randomY = Math.pow(Math.random(), this.parameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) 
+      const randomZ = Math.pow(Math.random(), this.parameters.randomnessPower) * (Math.random() < 0.5 ? 1 : -1) 
+
+      galaxyPoints[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX
+      galaxyPoints[i3 + 1] = randomY
+      galaxyPoints[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ
+    
+    // Colors
+    const mixedColor = colorInsde.clone()
+    mixedColor.lerp(colorOutside, radius / this.parameters.radius)
+
+     galaxyColors[i3] = mixedColor.r
+     galaxyColors[i3 + 1] = mixedColor.g
+     galaxyColors[i3 + 2] = mixedColor.b
     }
 
     this.galaxyGeometry.setAttribute('position', new THREE.BufferAttribute(galaxyPoints, 3))
     
+    this.galaxyGeometry.setAttribute('color', new THREE.BufferAttribute(galaxyColors, 3))
+
     // Material
     this.galaxyMaterial = new THREE.PointsMaterial({
       size: this.parameters.size,
       sizeAttenuation: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: THREE.AdditiveBlending,
+      vertexColors: true
     })
 
     // Points
