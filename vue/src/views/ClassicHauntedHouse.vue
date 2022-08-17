@@ -1,4 +1,3 @@
-\
 <template>
   <canvas class="webgl" ref="webgl"/>
 </template>

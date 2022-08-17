@@ -1,11 +1,21 @@
 <template>
-  <canvas class="webgl" ref="webgl"/>
+    <canvas class="webgl" ref="webgl"/>
+
+    <section class="section">
+          <h1>My Portfolio</h1>
+      </section>
+      <section class="section">
+          <h2>My projects</h2>
+      </section>
+      <section class="section">
+          <h2>Contact me</h2>
+      </section>
 </template>
 
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {Material, Mesh, MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, Points, Scene, Texture, Vector2, WebGLRenderer} from "three";
+import {BoxGeometry, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, PerspectiveCamera, Points, Scene, Texture, Vector2, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
@@ -15,7 +25,7 @@ import { tsThisType } from "@babel/types";
 import { randFloat } from "three/src/math/MathUtils";
 
 @Options({})
-export default class ClassicRaycaster extends Vue {
+export default class ClassicScrollBasedAnimation extends Vue {
   $refs!: {
     webgl: FullScreenDocumentElement
   }
@@ -26,21 +36,19 @@ export default class ClassicRaycaster extends Vue {
   renderer: WebGLRenderer = {} as WebGLRenderer;
   // fov between 45 & 75 || only shows objects between near and far values
   camera: PerspectiveCamera = new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100);
-  controls: OrbitControls = {} as OrbitControls
 
   // objects
-  raycaster: THREE.Raycaster;
-
-  geometry: THREE.SphereGeometry;
-
-  object1: Mesh;
-  object2: Mesh;
-  object3: Mesh;
+  cube: Mesh
 
   scene: Scene
 
   // Hovered?
   objectsIntersected: Array<Mesh> = [] as Array<Mesh>
+
+  // Parameters
+  parameters = {
+    materialColor: '#ffeded'
+  }
 
   // Mouse
   mouse:Vector2
@@ -57,45 +65,6 @@ export default class ClassicRaycaster extends Vue {
   tick() {
     const elapsedTime = this.clock.getElapsedTime()
 
-    this.object1.position.y = Math.sin(elapsedTime * 0.3) * 1.5
-    this.object2.position.y = Math.sin(elapsedTime * 0.8) * 1.5
-    this.object3.position.y = Math.sin(elapsedTime * 1.4) * 1.5
-
-    // Raycaster
-    this.raycaster.setFromCamera(this.mouse, this.camera)
-    // const raycasterOrigin = new THREE.Vector3(-3, 0 ,0)
-    // const raycasterDirection = new THREE.Vector3(10, 0 ,0)
-    // raycasterDirection.normalize()
-
-    // this.raycaster.set(raycasterOrigin, raycasterDirection)
-
-    const objectsToTest = [this.object1, this.object2, this.object3]
-    const intersectsObjects = this.raycaster.intersectObjects(objectsToTest)
-
-    for(const object of objectsToTest) {
-      const material = object.material as MeshBasicMaterial
-      material.color.set('#ff0000')
-    }
-
-    for(const intersect of intersectsObjects){
-      const object = intersect.object as Mesh
-      const material = object.material as MeshBasicMaterial
-      material.color.set('#0000ff')
-    }
-
-    if(intersectsObjects.length) {
-      if(this.objectsIntersected.length === 0) {
-        this.objectsIntersected.push(intersectsObjects[0].object as Mesh)
-      }
-    } else {
-      if(this.objectsIntersected.length > 0) {
-        this.objectsIntersected = [];
-      }
-    }
-
-    // Update controls
-    this.controls.update()
-
     //renderer
     this.renderer.render(this.scene, this.camera)
 
@@ -104,6 +73,8 @@ export default class ClassicRaycaster extends Vue {
 
   debug() {
     this.gui.close()
+
+    this.gui.addColor(this.parameters, 'materialColor')
 
   }
 
@@ -120,29 +91,12 @@ export default class ClassicRaycaster extends Vue {
   setupObjects() {
    console.log('objects')
 
-   this.geometry = new THREE.SphereGeometry(0.5, 16, 16)
-
-   this.object1 = new THREE.Mesh(
-    this.geometry,
-    new THREE.MeshBasicMaterial({color: '#ff0000'})
-   )
-    this.object1.position.x = -2
-
-   this.object2 = new THREE.Mesh(
-    this.geometry,
-    new THREE.MeshBasicMaterial({color: '#ff0000'})
+   this.cube = new Mesh(
+    new BoxGeometry(1, 1, 1),
+    new MeshBasicMaterial({ color: '#ff0000'})
    )
 
-
-   this.object3 = new THREE.Mesh(
-    this.geometry,
-    new THREE.MeshBasicMaterial({color: '#ff0000'})
-   )
-    this.object3.position.x = 2
-   this.scene.add(this.object1, this.object2, this.object3)
-
-    // Raycaster
-   this.raycaster = new THREE.Raycaster()
+   this.scene.add(this.cube)
 
   }
 
@@ -177,7 +131,7 @@ export default class ClassicRaycaster extends Vue {
 
 
   setupRenderer() {
-    this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
+    this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl, alpha: true});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.render(this.scene, this.camera)
@@ -230,9 +184,6 @@ export default class ClassicRaycaster extends Vue {
     //renderer
     this.setupRenderer()
 
-    this.controls = new OrbitControls(this.camera, this.$refs.webgl);
-    this.controls.enableDamping = true;
-
     // Resizing
     this.resizePage()
 
@@ -241,6 +192,11 @@ export default class ClassicRaycaster extends Vue {
 
     // Full screen
     fullscreenUtil(this.$refs.webgl)
+
+    const root = document.documentElement
+    const rootBody = document.body
+    root.style.setProperty('overflow-y', 'scroll')
+    rootBody.style.setProperty('background-color', '#1e1a20')
 
   }
 
@@ -255,5 +211,24 @@ export default class ClassicRaycaster extends Vue {
   z-index: 0;
   outline: none;
 
+}
+
+.section
+{
+    display: flex;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+    font-family: 'Cabin', sans-serif;
+    color: #ffeded;
+    text-transform: uppercase;
+    font-size: 7vmin;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+section:nth-child(even)
+{
+    justify-content: flex-end;
 }
 </style>

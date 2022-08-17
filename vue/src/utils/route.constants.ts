@@ -15,6 +15,7 @@ import ClassicHauntedHouse from "@/views/ClassicHauntedHouse.vue";
 import ClassicParticles from "@/views/ClassicParticles.vue";
 import ClassicGalaxyGenerator from "@/views/ClassicGalaxyGenerator.vue";
 import ClassicRaycaster from "@/views/ClassicRaycaster.vue";
+import ClassicScrollBasedAnimation from "@/views/ClassicScrollBasedAnimation.vue";
 
 export const RouteConstants: { title: string, sectionTitle?: boolean, url: string, component: Component }[] = [
   {title: 'Basics', sectionTitle: true, url: '', component: {} as Component},
@@ -34,5 +35,6 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "Haunted house", url: "/haunted-house", component: ClassicHauntedHouse},
   {title: "Particles", url: "/particles", component: ClassicParticles},
   {title: "Galaxy generator", url: "/galaxy-generator", component: ClassicGalaxyGenerator},
-  {title: "Raycaster", url: "/raycaster", component: ClassicRaycaster}
+  {title: "Raycaster", url: "/raycaster", component: ClassicRaycaster},
+  {title: "Scroll based animation", url: "/scroll-based-animation", component: ClassicScrollBasedAnimation},
 ]
