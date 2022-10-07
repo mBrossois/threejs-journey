@@ -5,14 +5,16 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, ConeGeometry, CubeTexture, CubeTextureLoader, DirectionalLight, Group, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, MeshToonMaterial, NearestFilter, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, Points, PointsMaterial, Scene, SphereGeometry, Texture, TorusGeometry, TorusKnotGeometry, Vector2, Vector3, WebGLRenderer} from "three";
+import {AmbientLight, AnimationMixer, BoxGeometry, BufferAttribute, BufferGeometry, ConeGeometry, CubeTexture, CubeTextureLoader, DirectionalLight, Group, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, MeshToonMaterial, NearestFilter, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, Points, PointsMaterial, Scene, SphereGeometry, Texture, TorusGeometry, TorusKnotGeometry, Vector2, Vector3, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js"
 import {FullScreenDocument, FullScreenDocumentElement} from "@/types/fullscreen.type";
 import {fullscreenUtil} from "@/utils/fullscreen.util";
 import * as dat from 'lil-gui'
 import * as CANNON from 'cannon-es'
 import { Body, Box, Plane, SAPBroadphase, Sphere, Vec3 } from 'cannon-es'
+import { gl } from 'date-fns/locale';
 
 @Options({})
 export default class AdvancedImportedModels extends Vue {
@@ -35,7 +37,6 @@ export default class AdvancedImportedModels extends Vue {
 
   // objects
   floor: Mesh
-
 
   // Material
 
@@ -69,12 +70,20 @@ export default class AdvancedImportedModels extends Vue {
 
   // Physics
 
+  // Mixer
+  mixer: AnimationMixer
+
   // Scroll
 
   tick() {
     const elapsedTime = this.clock.getElapsedTime()
     const deltaTime = elapsedTime - this.oldElapsedTime
     this.oldElapsedTime = elapsedTime
+
+    // Update mixer
+    if(this.mixer) {
+      this.mixer.update(deltaTime)
+    }
 
     //renderer
     this.renderer.render(this.scene, this.camera)
@@ -89,7 +98,11 @@ export default class AdvancedImportedModels extends Vue {
   setupModels() {
     console.log('Models')
 
+    const dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath('/draco/')
+
     const gltfLoader = new GLTFLoader()
+    gltfLoader.setDRACOLoader(dracoLoader)
 
     // gltfLoader.load(
     //   '/models/Duck/glTF/Duck.glTF',
@@ -127,20 +140,40 @@ export default class AdvancedImportedModels extends Vue {
     //   }
     // )
 
-    gltfLoader.load(
-      '/models/FlightHelmet/glTF/FlightHelmet.gltf',
-      (gltf) => {
-        console.log(gltf.scene)
-        // this.scene.add(gltf.scene.children[0])
+    // gltfLoader.load(
+    //   '/models/FlightHelmet/glTF/FlightHelmet.gltf',
+    //   (gltf) => {
+    //     console.log(gltf.scene)
+    //     // this.scene.add(gltf.scene.children[0])
         
-        // while(gltf.scene.children.length) {
-        //   this.scene.add(gltf.scene.children[0])
-        // }
+    //     // while(gltf.scene.children.length) {
+    //     //   this.scene.add(gltf.scene.children[0])
+    //     // }
 
-        const children = [...gltf.scene.children]
-        for(const child of children) {
-          this.scene.add(child)
-        }
+    //     const children = [...gltf.scene.children]
+    //     for(const child of children) {
+    //       this.scene.add(child)
+    //     }
+    //   }
+    // )
+
+    // gltfLoader.load(
+    //   '/models/Duck/glTF-Draco/Duck.gltf',
+    //   (gltf) => {
+    //     this.scene.add(gltf.scene)
+    //   }
+    // )
+
+    gltfLoader.load(
+      '/models/Fox/glTF/Fox.gltf',
+      (gltf) => {
+        gltf.scene.scale.set(0.025, 0.025, 0.025)
+        this.scene.add(gltf.scene)
+
+        this.mixer = new AnimationMixer(gltf.scene)
+        const action = this.mixer.clipAction(gltf.animations[1])
+
+        action.play()
       }
     )
   }
