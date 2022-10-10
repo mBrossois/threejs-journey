@@ -17,6 +17,7 @@ import ClassicGalaxyGenerator from "@/views/ClassicGalaxyGenerator.vue";
 import ClassicRaycaster from "@/views/ClassicRaycaster.vue";
 import ClassicScrollBasedAnimation from "@/views/ClassicScrollBasedAnimation.vue";
 import AdvancedPhysics from "@/views/AdvancedPhysics.vue"
+import AdvancedImportedModels from "@/views/AdvancedImportedModels.vue"
 
 export const RouteConstants: { title: string, sectionTitle?: boolean, url: string, component: Component }[] = [
   {title: 'Basics', sectionTitle: true, url: '', component: {} as Component},
@@ -40,5 +41,6 @@ export const RouteConstants: { title: string, sectionTitle?: boolean, url: strin
   {title: "Scroll based animation", url: "/scroll-based-animation", component: ClassicScrollBasedAnimation},
   {title: "Advanced techniques", sectionTitle: true, url: "", component: {} as Component},
   {title: "Physics", url: "/physics", component: AdvancedPhysics},
+  {title: "Imported models", url: "/imported-models", component: AdvancedImportedModels},
 
 ]
