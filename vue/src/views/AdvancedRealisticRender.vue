@@ -5,7 +5,7 @@
 <script lang="ts">
 import {Options, Vue} from "vue-class-component";
 import * as THREE from "three";
-import {AmbientLight, AnimationMixer, BoxGeometry, BufferAttribute, BufferGeometry, ConeGeometry, CubeTexture, CubeTextureLoader, DirectionalLight, Group, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial, MeshToonMaterial, NearestFilter, PCFSoftShadowMap, PerspectiveCamera, PlaneGeometry, Points, PointsMaterial, Scene, SphereGeometry, Texture, TorusGeometry, TorusKnotGeometry, Vector2, Vector3, WebGLRenderer} from "three";
+import {CubeTexture, CubeTextureLoader, DirectionalLight, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, SphereGeometry, Texture, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js"
@@ -17,7 +17,7 @@ import { Body, Box, Plane, SAPBroadphase, Sphere, Vec3 } from 'cannon-es'
 import { gl } from 'date-fns/locale';
 
 @Options({})
-export default class AdvancedCustomModels extends Vue {
+export default class AdvancedRealisticRender extends Vue {
   $refs!: {
     webgl: FullScreenDocumentElement
   }
@@ -32,11 +32,11 @@ export default class AdvancedCustomModels extends Vue {
   // Models
 
   // Lights
-  ambientLight: AmbientLight
   directionalLight: DirectionalLight
 
   // objects
-  floor: Mesh
+  testSphere: Mesh
+
 
   // Material
 
@@ -47,8 +47,7 @@ export default class AdvancedCustomModels extends Vue {
   // Hovered?
 
   // Parameters
-  parameters = {
-  }
+  parameters = {envMapIntensity: 5} 
 
   // Mouse
 
@@ -57,9 +56,9 @@ export default class AdvancedCustomModels extends Vue {
 
   // Textures
   environmentMapTexture: CubeTexture
+  environmentMap: Texture
 
   // Sounds
-  hitSound = new Audio('/sounds/hit.mp3')
   
   gui = new dat.GUI({width: 300})
 
@@ -71,7 +70,6 @@ export default class AdvancedCustomModels extends Vue {
   // Physics
 
   // Mixer
-  mixer: AnimationMixer
 
   // Scroll
 
@@ -81,9 +79,6 @@ export default class AdvancedCustomModels extends Vue {
     this.oldElapsedTime = elapsedTime
 
     // Update mixer
-    if(this.mixer) {
-      this.mixer.update(deltaTime)
-    }
 
     //renderer
     this.renderer.render(this.scene, this.camera)
@@ -93,6 +88,13 @@ export default class AdvancedCustomModels extends Vue {
 
   debug() {
     this.gui.close()
+
+    this.gui.add(this.directionalLight, 'intensity').min(0).max(10).step(0.001).name('lightIntensity')
+    this.gui.add(this.directionalLight.position, 'x').min(-5).max(5).step(0.001).name('lightX')
+    this.gui.add(this.directionalLight.position, 'y').min(-5).max(5).step(0.001).name('lightY')
+    this.gui.add(this.directionalLight.position, 'z').min(-5).max(5).step(0.001).name('lightZ')
+    this.gui.add(this.parameters, 'envMapIntensity').min(0).max(10).step(0.001)
+      .onChange(this.updateAllMaterials)
   }
 
   setupModels() {
@@ -100,55 +102,55 @@ export default class AdvancedCustomModels extends Vue {
 
     const gltfLoader = new GLTFLoader()
 
-    gltfLoader.load(
-      '/models/hamburger.glb',
-      (gltf) => {
-        gltf.scene.scale.set(0.1, 0.1, 0.1)
-        this.scene.add(gltf.scene)
-      }
-    )
+    gltfLoader.load('/models/FlightHelmet/glTF/FlightHelmet.gltf', (gltf) => {
+     
+      gltf.scene.scale.set(10, 10, 10)
+      gltf.scene.position.set(0, -4, 0)
+      gltf.scene.rotation.y = Math.PI * 0.5
+      this.scene.add(gltf.scene)
+
+      this.gui.add(gltf.scene.rotation, 'y')
+        .min(- Math.PI)
+        .max(Math.PI)
+        .step(0.001)
+        .name('rotation')
+
+        this.updateAllMaterials()
+    })
+
   }
 
   setupLights() {
     console.log('lights')
 
-    this.ambientLight = new AmbientLight(0xffffff, 0.8)
-
-    this.directionalLight = new DirectionalLight(0xffffff, 0.6)
-    this.directionalLight.castShadow = true
-    this.directionalLight.shadow.mapSize.set(1024, 1024)
-    this.directionalLight.shadow.camera.far = 15
-    this.directionalLight.shadow.camera.left = -7
-    this.directionalLight.shadow.camera.top = 7
-    this.directionalLight.shadow.camera.right = 7
-    this.directionalLight.shadow.camera.bottom = -7
-    this.directionalLight.position.set(5, 5, 5)
-
-    this.scene.add(this.ambientLight, this.directionalLight)
-
+    this.directionalLight = new DirectionalLight('#ffffff', 3)
+    this.directionalLight.position.set(0.25, 3, -2.25)
+    this.scene.add(this.directionalLight)
   }
 
   setupMaterial() {
     console.log('materials')
   }
 
+  updateAllMaterials() {
+    this.scene.traverse((child) => {
+      if(child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+        child.material.envMap = this.environmentMap
+        child.material.envMapIntensity = this.parameters.envMapIntensity
+
+      }
+    })
+  }
+
   setupObjects() {
    console.log('objects')
 
-    this.floor = new Mesh(
-      new PlaneGeometry(10, 10),
-      new MeshStandardMaterial({
-        color: '#444444',
-        metalness: 0,
-        roughness: 0.5,
-      })
-    )
+  //  this.testSphere = new Mesh(
+  //   new SphereGeometry(1, 32, 32),
+  //   new MeshStandardMaterial()
+  //  )
 
-    this.floor.receiveShadow = true
-    this.floor.rotation.x = - Math.PI * 0.5
-
-  //  this.scene.add(this.sphere, this.floor)
-   this.scene.add(this.floor)
+  //  this.scene.add(this.testSphere)
 
   }
 
@@ -160,8 +162,18 @@ export default class AdvancedCustomModels extends Vue {
   setupTextures() {
     console.log('textures')
 
-    // gradient
+    const cubeTextureLoader = new CubeTextureLoader()
+    this.environmentMap = cubeTextureLoader.load([
+      '/textures/environmentMaps/0/px.jpg',
+      '/textures/environmentMaps/0/nx.jpg',
+      '/textures/environmentMaps/0/py.jpg',
+      '/textures/environmentMaps/0/ny.jpg',
+      '/textures/environmentMaps/0/pz.jpg',
+      '/textures/environmentMaps/0/nz.jpg'
+    ])
 
+    this.scene.background = this.environmentMap
+    // this.scene.environment = this.environmentMap
   }
 
   physics() {
@@ -172,8 +184,8 @@ export default class AdvancedCustomModels extends Vue {
     this.renderer = new THREE.WebGLRenderer({canvas: this.$refs.webgl});
     this.renderer.setSize(this.sizes.width, this.sizes.height)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = PCFSoftShadowMap
+
+    // Make it according to real life light
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -227,7 +239,7 @@ export default class AdvancedCustomModels extends Vue {
     this.debug()
 
     // Camera
-    this.camera.position.set(2, 2, 2)
+    this.camera.position.set(4, 1, -4)
     this.scene.add(this.camera)
 
     // Axes helper
